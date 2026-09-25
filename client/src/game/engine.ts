@@ -20,6 +20,7 @@ export class GameEngine {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private animFrameId: number | null = null;
+  private hintTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   // Estado do Labirinto
   public grid: MazeCell[][] = [];
@@ -140,8 +141,13 @@ export class GameEngine {
     );
 
     // Dica dura 5 segundos visível
-    setTimeout(() => {
+    if (this.hintTimeoutId !== null) {
+      clearTimeout(this.hintTimeoutId);
+    }
+
+    this.hintTimeoutId = setTimeout(() => {
       this.hintPath = [];
+      this.hintTimeoutId = null;
     }, 5000);
   }
 
@@ -237,28 +243,28 @@ export class GameEngine {
     });
   }
 
-  private bindEvents() {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'KeyW'].includes(e.code)) {
-        e.preventDefault();
-        this.move('up');
-      } else if (['ArrowRight', 'KeyD'].includes(e.code)) {
-        e.preventDefault();
-        this.move('right');
-      } else if (['ArrowDown', 'KeyS'].includes(e.code)) {
-        e.preventDefault();
-        this.move('down');
-      } else if (['ArrowLeft', 'KeyA'].includes(e.code)) {
-        e.preventDefault();
-        this.move('left');
-      } else if (e.code === 'KeyH') {
-        this.requestHint();
-      } else if (e.code === 'KeyP') {
-        this.pauseGame();
-      }
-    };
+  private onKeyDown = (e: KeyboardEvent) => {
+    if (['ArrowUp', 'KeyW'].includes(e.code)) {
+      e.preventDefault();
+      this.move('up');
+    } else if (['ArrowRight', 'KeyD'].includes(e.code)) {
+      e.preventDefault();
+      this.move('right');
+    } else if (['ArrowDown', 'KeyS'].includes(e.code)) {
+      e.preventDefault();
+      this.move('down');
+    } else if (['ArrowLeft', 'KeyA'].includes(e.code)) {
+      e.preventDefault();
+      this.move('left');
+    } else if (e.code === 'KeyH') {
+      this.requestHint();
+    } else if (e.code === 'KeyP') {
+      this.pauseGame();
+    }
+  };
 
-    window.addEventListener('keydown', onKeyDown);
+  private bindEvents() {
+    window.addEventListener('keydown', this.onKeyDown);
   }
 
   public loop = () => {
@@ -430,8 +436,19 @@ export class GameEngine {
   }
 
   public destroy() {
-    if (this.animFrameId) {
-      cancelAnimationFrame(this.animFrameId);
+    window.removeEventListener('keydown', this.onKeyDown);
+
+    if (this.hintTimeoutId !== null) {
+      clearTimeout(this.hintTimeoutId);
+      this.hintTimeoutId = null;
     }
+
+    if (this.animFrameId !== null) {
+      cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
+    }
+
+    this.isRunning = false;
+    this.particles = [];
   }
 }
