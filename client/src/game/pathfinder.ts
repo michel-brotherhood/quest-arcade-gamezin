@@ -19,6 +19,29 @@ export class AStarFinder {
     endX: number,
     endY: number
   ): { x: number; y: number }[] {
+    if (
+      !Number.isInteger(cols) ||
+      !Number.isInteger(rows) ||
+      cols <= 0 ||
+      rows <= 0 ||
+      grid.length !== rows ||
+      grid.some((row) => !Array.isArray(row) || row.length !== cols) ||
+      !Number.isInteger(startX) ||
+      !Number.isInteger(startY) ||
+      !Number.isInteger(endX) ||
+      !Number.isInteger(endY) ||
+      startX < 0 ||
+      startX >= cols ||
+      endX < 0 ||
+      endX >= cols ||
+      startY < 0 ||
+      startY >= rows ||
+      endY < 0 ||
+      endY >= rows
+    ) {
+      return [];
+    }
+
     const openList: Node[] = [];
     const closedSet = new Set<string>();
 
